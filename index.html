@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Four Point Pitch</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #0f2d1e;
+    --gold: #e4b84e;
+    --gold-light: #f5d06a;
+    --cream: #f8f4ec;
+    --red: #9b2020;
+    --red-light: #d43c2c;
+    --orange: #c0502a;
+    --orange-light: #e07040;
+    --black: #0d0d0d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  button, input { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  body {
+    background-color: var(--green);
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(20,70,45,0.7) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(10,30,18,0.9) 0%, transparent 50%);
+    min-height: 100vh;
+    font-family: 'Courier Prime', monospace;
+    font-size: 16px;
+    color: var(--cream);
+    padding: 20px 16px 60px;
+  }
+  header { text-align: center; margin-bottom: 22px; }
+  header::before { content: '♠ ♥ ♦ ♣'; display: block; font-size: 16px; letter-spacing: 6px; color: var(--gold); margin-bottom: 6px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px, 8vw, 50px); font-weight: 900; color: var(--gold); text-shadow: 2px 2px 0 rgba(0,0,0,0.6), 0 0 30px rgba(228,184,78,0.4); letter-spacing: 2px; }
+  .subtitle { font-size: 13px; letter-spacing: 4px; text-transform: uppercase; color: #fff; margin-top: 4px; }
+  .team-names-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .team-name-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .team-label { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: #fff; }
+  .team-name-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.4); font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; text-align: center; width: 100%; outline: none; padding: 2px 4px; }
+  .team-name-wrap.a .team-name-input { color: #f08080; }
+  .team-name-wrap.b .team-name-input { color: var(--gold); }
+  .vs-badge { font-size: 14px; color: #fff; letter-spacing: 2px; }
+  .match-wins-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 18px; background: rgba(0,0,0,0.45); border-radius: 8px; padding: 10px 12px; border: 1px solid rgba(228,184,78,0.3); }
+  .wins-side { text-align: center; }
+  .wins-count { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 900; line-height: 1; }
+  .wins-side.a .wins-count { color: #f08080; }
+  .wins-side.b .wins-count { color: var(--gold); }
+  .wins-label { font-size: 12px; letter-spacing: 2px; color: #fff; text-transform: uppercase; margin-top: 2px; }
+  .match-center { text-align: center; font-size: 12px; letter-spacing: 2px; color: #fff; text-transform: uppercase; line-height: 1.7; }
+  .games-section { margin-bottom: 18px; }
+  .section-title { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: #fff; margin-bottom: 10px; text-align: center; }
+  .games-scroll { max-height: 560px; overflow-y: auto; padding-right: 2px; }
+  .games-scroll::-webkit-scrollbar { width: 4px; }
+  .games-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 2px; }
+  .games-scroll::-webkit-scrollbar-thumb { background: rgba(228,184,78,0.5); border-radius: 2px; }
+  .game-card { background: rgba(0,0,0,0.45); border: 1px solid rgba(228,184,78,0.3); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; transition: border-color 0.3s, opacity 0.3s; }
+  .game-card.closed { opacity: 0.7; }
+  .game-card.closed-a { border-color: rgba(212,60,44,0.6); }
+  .game-card.closed-b { border-color: rgba(228,184,78,0.6); }
+  .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .game-num { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #fff; }
+  .game-status { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 10px; border-radius: 10px; }
+  .st-open { background: rgba(30,100,60,0.7); color: #90efb8; border: 1px solid rgba(144,239,184,0.5); }
+  .st-a { background: rgba(155,32,32,0.7); color: #ff9090; border: 1px solid rgba(255,144,144,0.5); }
+  .st-b { background: rgba(150,110,0,0.6); color: var(--gold); border: 1px solid rgba(228,184,78,0.5); }
+  .game-scores { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+  .score-side { text-align: center; }
+  .score-num { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 900; line-height: 1; }
+  .score-side.a .score-num { color: #f08080; }
+  .score-side.b .score-num { color: var(--gold); }
+  .score-bar-wrap { background: rgba(0,0,0,0.4); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 6px; }
+  .score-bar-a { background: linear-gradient(90deg, #9b2020, #d43c2c); height: 100%; transition: width 0.35s; }
+  .score-bar-b { background: linear-gradient(90deg, var(--gold), var(--gold-light)); height: 100%; transition: width 0.35s; }
+  .game-dash { font-size: 22px; color: #fff; }
+  .empty-msg { text-align: center; color: #fff; font-size: 14px; padding: 14px; letter-spacing: 2px; }
+  .game-value { font-size: 13px; color: rgba(228,184,78,0.9); letter-spacing: 1px; }
+  .game-dollar-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px; letter-spacing: 1px; }
+  .gdollar-a, .gdollar-b { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 16px; }
+  .gdollar-a.pos, .gdollar-b.pos { color: #90efb8; }
+  .gdollar-a.neg, .gdollar-b.neg { color: #f08080; }
+  .gdollar-label { font-size: 12px; color: #fff; letter-spacing: 2px; text-transform: uppercase; }
+  .entry-card { background: rgba(0,0,0,0.45); border: 1px solid rgba(228,184,78,0.35); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+  .entry-card h2 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--gold); margin-bottom: 14px; text-align: center; letter-spacing: 1px; }
+  .mode-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 16px; border: 1px solid rgba(228,184,78,0.35); border-radius: 8px; overflow: hidden; }
+  .mode-tab { padding: 12px 8px; background: rgba(0,0,0,0.3); border: none; color: #fff; font-family: 'Courier Prime', monospace; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  .mode-tab.tab-hand-active { background: rgba(228,184,78,0.25); color: var(--gold); font-weight: 700; }
+  .mode-tab.tab-set-active { background: rgba(192,80,42,0.35); color: #ffaa77; font-weight: 700; }
+  .four-points-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .point-row { background: rgba(0,0,0,0.35); border-radius: 8px; padding: 12px 8px; border: 1px solid rgba(255,255,255,0.15); }
+  .point-name { font-size: 14px; letter-spacing: 1px; text-align: center; margin-bottom: 8px; color: var(--gold-light); font-weight: 700; text-transform: uppercase; }
+  .team-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .toggle-btn { padding: 8px 4px; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; background: rgba(0,0,0,0.3); color: #fff; font-family: 'Courier Prime', monospace; font-size: 13px; cursor: pointer; transition: all 0.15s; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toggle-btn.active-a { background: var(--red-light); border: 3px solid #ff6060; color: #fff; font-weight: 700; box-shadow: 0 0 8px rgba(255,96,96,0.6); }
+  .toggle-btn.active-b { background: var(--gold); border: 3px solid #fff; color: var(--black); font-weight: 700; box-shadow: 0 0 8px rgba(228,184,78,0.7); }
+  .round-tally { display: flex; justify-content: center; gap: 18px; font-size: 14px; color: #fff; margin-bottom: 12px; }
+  .submit-hand { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: var(--black); border: none; border-radius: 8px; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
+  .submit-hand:active { transform: scale(0.98); }
+  #setPanel { display: none; }
+  .set-sub-label { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: #fff; text-align: center; margin-bottom: 8px; }
+  .set-team-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .set-team-btn { padding: 14px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.35); color: #fff; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .set-team-btn.sel-a { background: rgba(155,32,32,0.65); border: 3px solid #ff6060; color: #ffaaaa; box-shadow: 0 0 8px rgba(255,96,96,0.5); }
+  .set-team-btn.sel-b { background: rgba(150,110,0,0.55); border: 3px solid #ffe066; color: var(--gold); box-shadow: 0 0 8px rgba(228,184,78,0.5); }
+  .set-penalty-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .penalty-btn { padding: 14px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.35); color: #fff; font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 900; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .penalty-btn.sel { background: rgba(180,60,20,0.6); border-color: #ffaa77; color: #ffaa77; }
+  .submit-set { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--orange), var(--orange-light)); color: #fff; border: none; border-radius: 8px; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
+  .submit-set:active { transform: scale(0.98); }
+  .history-section h2 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--gold); margin-bottom: 12px; text-align: center; letter-spacing: 1px; }
+  .history-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; background: transparent; }
+  .history-table th { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #000; padding: 7px 4px; border-bottom: 1px solid #a07820; text-align: center; background: #c9a84c; }
+  .history-table th:nth-child(1) { width: 30px; }
+  .history-table th:nth-child(2) { width: 40px; }
+  .history-table th:nth-child(3) { width: 40px; }
+  .history-table th:nth-child(4) { width: auto; }
+  .history-table th:nth-child(5) { width: 60px; }
+  .history-table th:nth-child(6) { width: 42px; }
+  .history-table td { padding: 9px 4px; text-align: center; border-bottom: 1px solid #c8c0b0; color: #000; background: #e8e0cc; }
+  .history-table tr:nth-child(even) td { background: #d8d0bc; }
+  .history-table tr:hover td { background: #e8d898; }
+  .pts-a { color: #9b2020; font-weight: 700; font-size: 15px; }
+  .pts-b { color: #7a6010; font-weight: 700; font-size: 15px; }
+  .pts-set { color: #8b3a10; font-weight: 700; font-size: 14px; }
+  .round-num { color: #000; font-weight: 700; font-size: 14px; }
+  .delete-btn { background: #c8a0a0; border: 1px solid #9b2020; border-radius: 6px; color: #6b0000; cursor: pointer; font-size: 14px; padding: 4px 10px; transition: all 0.15s; min-width: 32px; font-weight: 700; }
+  .delete-btn:hover { background: #e08080; }
+  .games-col { font-size: 12px; color: #333; }
+  .set-row td { background: #ddbba0; color: #000; }
+  .divider { border: none; border-top: 1px solid rgba(201,168,76,0.13); margin: 18px 0; }
+  .dollar-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 14px; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.15); }
+  .dollar-side { text-align: center; }
+  .dollar-label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #fff; margin-bottom: 4px; }
+  .dollar-input-wrap { display: flex; align-items: center; justify-content: center; gap: 3px; }
+  .dollar-sign { font-family: 'Playfair Display', serif; font-size: 18px; color: #fff; }
+  .dollar-input { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.35); color: var(--cream); font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; width: 70px; text-align: center; outline: none; padding: 2px; }
+  .dollar-center { text-align: center; font-size: 12px; color: #fff; letter-spacing: 1px; line-height: 1.6; }
+  .double-badge { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
+  .money-tally { background: rgba(0,0,0,0.45); border: 1px solid rgba(228,184,78,0.3); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; text-align: center; }
+  .money-tally-label { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: #fff; margin-bottom: 6px; }
+  .money-tally-amount { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; line-height: 1; }
+  .money-tally-amount.owes-a { color: #f08080; }
+  .money-tally-amount.owes-b { color: var(--gold); }
+  .money-tally-amount.even { color: #fff; }
+  .money-tally-sub { font-size: 13px; color: #fff; margin-top: 4px; letter-spacing: 1px; }
+  .winner-banner { display: none; background: linear-gradient(135deg, rgba(228,184,78,0.16), rgba(228,184,78,0.04)); border: 2px solid var(--gold); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; animation: glow 1.5s ease-in-out infinite alternate; }
+  @keyframes glow { from { box-shadow: 0 0 10px rgba(228,184,78,0.3); } to { box-shadow: 0 0 30px rgba(228,184,78,0.7); } }
+  .winner-banner.show { display: block; }
+  .winner-banner h2 { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--gold); margin-bottom: 4px; }
+  .winner-banner p { color: #fff; font-size: 13px; letter-spacing: 2px; }
+  .reset-btn { margin-top: 12px; padding: 10px 24px; background: transparent; border: 1px solid var(--gold); color: var(--gold); font-family: 'Courier Prime', monospace; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
+  .reset-btn:hover { background: var(--gold); color: var(--black); }
+  .bid-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .bid-modal-box { background: #0f2d1e; border: 2px solid var(--gold); border-radius: 14px; padding: 28px 20px; text-align: center; width: 100%; max-width: 340px; box-shadow: 0 0 40px rgba(228,184,78,0.3); }
+  .bid-modal-box h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--gold); margin-bottom: 6px; }
+  .bid-modal-box p { font-size: 13px; color: #fff; letter-spacing: 1px; margin-bottom: 20px; }
+  .bid-modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .bid-modal-btn { padding: 16px 8px; border-radius: 10px; border: none; cursor: pointer; font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; }
+  .bid-modal-btn:active { transform: scale(0.97); }
+  .bid-modal-btn.a { background: rgba(155,32,32,0.8); color: #ffaaaa; border: 1px solid #f08080; }
+  .bid-modal-btn.b { background: rgba(150,110,0,0.7); color: var(--gold); border: 1px solid var(--gold); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Four Point Pitch</h1>
+  <div class="subtitle">Multi-Game Tracker</div>
+</header>
+
+<div class="bid-modal" id="bidModal">
+  <div class="bid-modal-box">
+    <h3 id="bidPromptTitle">Both teams reached 7!</h3>
+    <p>Who had the bid? That team wins the game.</p>
+    <div class="bid-modal-btns">
+      <button class="bid-modal-btn a" id="bidPromptA"></button>
+      <button class="bid-modal-btn b" id="bidPromptB"></button>
+    </div>
+  </div>
+</div>
+
+<div class="winner-banner" id="winnerBanner">
+  <h2 id="winnerText">🏆 Winner!</h2>
+  <p id="winnerSub">MATCH OVER</p>
+  <br>
+  <button class="reset-btn" onclick="resetAll()">New Match</button>
+</div>
+
+<div class="team-names-row">
+  <div class="team-name-wrap a">
+    <div class="team-label">Team 1</div>
+    <input class="team-name-input" id="teamAName" value="Us" maxlength="8" />
+  </div>
+  <div class="vs-badge">VS</div>
+  <div class="team-name-wrap b">
+    <div class="team-label">Team 2</div>
+    <input class="team-name-input" id="teamBName" value="Them" maxlength="8" />
+  </div>
+</div>
+
+<div class="match-wins-row">
+  <div class="wins-side a">
+    <div class="wins-count" id="winsA">0</div>
+    <div class="wins-label">Games Won</div>
+  </div>
+  <div class="match-center">Most<br>Games<br>Wins</div>
+  <div class="wins-side b">
+    <div class="wins-count" id="winsB">0</div>
+    <div class="wins-label">Games Won</div>
+  </div>
+</div>
+
+<div class="dollar-row">
+  <div class="dollar-side">
+    <div class="dollar-label">Games 1–9</div>
+    <div class="dollar-input-wrap">
+      <span class="dollar-sign">$</span>
+      <input class="dollar-input" id="baseValue" type="number" min="0" value="1" />
+    </div>
+  </div>
+  <div class="dollar-center">per<br>game<br>won</div>
+  <div class="dollar-side">
+    <div class="dollar-label">Games 10–12</div>
+    <div class="dollar-input-wrap">
+      <span class="dollar-sign" style="color:var(--gold)">$</span>
+      <span id="doubleDisplay" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--gold)">2</span>
+    </div>
+    <div class="double-badge">2× double</div>
+  </div>
+</div>
+
+<div class="money-tally">
+  <div class="money-tally-label">Running Total</div>
+  <div class="money-tally-amount even" id="tallyAmount">Even — $0.00</div>
+  <div class="money-tally-sub" id="tallySub"></div>
+</div>
+
+<div class="games-section">
+  <div class="section-title">Active Games — Every hand applies to all open games</div>
+  <div class="games-scroll" id="gamesScroll"><div id="gamesContainer"></div></div>
+</div>
+
+<hr class="divider">
+
+<div class="entry-card" id="handEntry">
+  <h2 id="handTitle">Hand 1</h2>
+  <div class="mode-tabs">
+    <button class="mode-tab tab-hand-active" id="tabHand" onclick="switchMode('hand')">♠ Record Hand</button>
+    <button class="mode-tab" id="tabSet" onclick="switchMode('set')">✕ Record Set</button>
+  </div>
+
+  <div id="handPanel">
+    <div class="four-points-grid">
+      <div class="point-row">
+        <div class="point-name">♠ High</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="high-a" onclick="assignPoint('high','a')"></button>
+          <button class="toggle-btn" id="high-b" onclick="assignPoint('high','b')"></button>
+        </div>
+      </div>
+      <div class="point-row">
+        <div class="point-name">♣ Low</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="low-a" onclick="assignPoint('low','a')"></button>
+          <button class="toggle-btn" id="low-b" onclick="assignPoint('low','b')"></button>
+        </div>
+      </div>
+      <div class="point-row">
+        <div class="point-name">♦ Jack</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="jack-a" onclick="assignPoint('jack','a')"></button>
+          <button class="toggle-btn" id="jack-b" onclick="assignPoint('jack','b')"></button>
+        </div>
+      </div>
+      <div class="point-row">
+        <div class="point-name">♥ Game</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="game-a" onclick="assignPoint('game','a')"></button>
+          <button class="toggle-btn" id="game-b" onclick="assignPoint('game','b')"></button>
+        </div>
+      </div>
+    </div>
+    <div class="round-tally">
+      <span id="tallyA"></span>
+      <span style="opacity:0.4">|</span>
+      <span id="tallyB"></span>
+    </div>
+    <button class="submit-hand" id="btnSubmitHand">+ Record Hand</button>
+  </div>
+
+  <div id="setPanel">
+    <div class="set-sub-label">Which team got set?</div>
+    <div class="set-team-row">
+      <button class="set-team-btn" id="setTeamA" onclick="selectSetTeam('a')"></button>
+      <button class="set-team-btn" id="setTeamB" onclick="selectSetTeam('b')"></button>
+    </div>
+    <div class="set-sub-label">Penalty points lost</div>
+    <div class="set-penalty-row">
+      <button class="penalty-btn" id="pen2" onclick="selectPenalty(2)">−2</button>
+      <button class="penalty-btn" id="pen3" onclick="selectPenalty(3)">−3</button>
+      <button class="penalty-btn" id="pen4" onclick="selectPenalty(4)">−4</button>
+    </div>
+    <div class="set-sub-label">Points won this hand</div>
+    <div class="four-points-grid" style="margin-bottom:12px">
+      <div class="point-row">
+        <div class="point-name">♠ High</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="set-high-a" onclick="assignSetPoint('high','a')"></button>
+          <button class="toggle-btn" id="set-high-b" onclick="assignSetPoint('high','b')"></button>
+        </div>
+      </div>
+      <div class="point-row">
+        <div class="point-name">♣ Low</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="set-low-a" onclick="assignSetPoint('low','a')"></button>
+          <button class="toggle-btn" id="set-low-b" onclick="assignSetPoint('low','b')"></button>
+        </div>
+      </div>
+      <div class="point-row">
+        <div class="point-name">♦ Jack</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="set-jack-a" onclick="assignSetPoint('jack','a')"></button>
+          <button class="toggle-btn" id="set-jack-b" onclick="assignSetPoint('jack','b')"></button>
+        </div>
+      </div>
+      <div class="point-row">
+        <div class="point-name">♥ Game</div>
+        <div class="team-toggle">
+          <button class="toggle-btn" id="set-game-a" onclick="assignSetPoint('game','a')"></button>
+          <button class="toggle-btn" id="set-game-b" onclick="assignSetPoint('game','b')"></button>
+        </div>
+      </div>
+    </div>
+    <div class="round-tally">
+      <span id="setTallyA"></span>
+      <span style="opacity:0.4">|</span>
+      <span id="setTallyB"></span>
+    </div>
+    <button class="submit-set" id="btnSubmitSet">✕ Record Set</button>
+  </div>
+</div>
+
+<div class="history-section">
+  <h2>Hand History</h2>
+  <div id="histEmpty" class="empty-msg">No hands played yet</div>
+  <table class="history-table" id="histTable" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th id="thA">Us</th>
+        <th id="thB">Them</th>
+        <th>Detail</th>
+        <th>Games</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="histBody"></tbody>
+  </table>
+</div>
+
+<script>
+  const WIN = 7, MAX_OPEN = 3, MAX_GAMES = 12;
+  const ICONS = { high:'♠H', low:'♣L', jack:'♦J', game:'♥G' };
+
+  let games = [], hands = [], nextId = 1;
+  let picks = { high:null, low:null, jack:null, game:null };
+  let setPicks = { high:null, low:null, jack:null, game:null };
+  let mode = 'hand', setTeam = null, setPenalty = null;
+
+  const nA = () => document.getElementById('teamAName').value || 'Us';
+  const nB = () => document.getElementById('teamBName').value || 'Them';
+  const openGames = () => games.filter(g => !g.closed);
+
+  function closeGame(g) {
+    if (g.scoreA >= WIN && g.scoreB >= WIN) { showBidPrompt(g); return; }
+    g.closed = true;
+    g.winner = g.scoreA >= WIN ? 'a' : 'b';
+    g.doubled = (g.winner === 'a' ? g.scoreB : g.scoreA) <= 0;
+  }
+
+  function showBidPrompt(g) {
+    document.getElementById('bidPromptTitle').textContent = 'Game ' + g.id + ' — Both teams reached 7!';
+    document.getElementById('bidPromptA').textContent = nA() + ' had the bid';
+    document.getElementById('bidPromptB').textContent = nB() + ' had the bid';
+    document.getElementById('bidPromptA').onclick = () => resolveBid(g, 'a');
+    document.getElementById('bidPromptB').onclick = () => resolveBid(g, 'b');
+    document.getElementById('bidModal').style.display = 'flex';
+  }
+
+  function resolveBid(g, winner) {
+    document.getElementById('bidModal').style.display = 'none';
+    g.closed = true; g.winner = winner;
+    g.doubled = (winner === 'a' ? g.scoreB : g.scoreA) <= 0;
+    renderAll();
+  }
+
+  function switchMode(m) {
+    mode = m;
+    document.getElementById('handPanel').style.display = m === 'hand' ? 'block' : 'none';
+    document.getElementById('setPanel').style.display = m === 'set' ? 'block' : 'none';
+    document.getElementById('tabHand').className = 'mode-tab' + (m === 'hand' ? ' tab-hand-active' : '');
+    document.getElementById('tabSet').className = 'mode-tab' + (m === 'set' ? ' tab-set-active' : '');
+  }
+
+  function assignPoint(pt, team) { picks[pt] = picks[pt] === team ? null : team; refreshToggles(); refreshTally(); }
+  function assignSetPoint(pt, team) { setPicks[pt] = setPicks[pt] === team ? null : team; refreshSetToggles(); refreshSetTally(); }
+
+  function refreshToggles() {
+    ['high','low','jack','game'].forEach(p => {
+      const a = document.getElementById(p+'-a'), b = document.getElementById(p+'-b');
+      a.textContent = nA(); b.textContent = nB();
+      a.className = 'toggle-btn' + (picks[p]==='a' ? ' active-a' : '');
+      b.className = 'toggle-btn' + (picks[p]==='b' ? ' active-b' : '');
+    });
+  }
+  function refreshSetToggles() {
+    ['high','low','jack','game'].forEach(p => {
+      const a = document.getElementById('set-'+p+'-a'), b = document.getElementById('set-'+p+'-b');
+      a.textContent = nA(); b.textContent = nB();
+      a.className = 'toggle-btn' + (setPicks[p]==='a' ? ' active-a' : '');
+      b.className = 'toggle-btn' + (setPicks[p]==='b' ? ' active-b' : '');
+    });
+  }
+  function refreshTally() {
+    let a=0,b=0; Object.values(picks).forEach(v=>{if(v==='a')a++;else if(v==='b')b++;});
+    document.getElementById('tallyA').textContent = nA()+': '+a;
+    document.getElementById('tallyB').textContent = nB()+': '+b;
+  }
+  function refreshSetTally() {
+    let a=0,b=0; Object.values(setPicks).forEach(v=>{if(v==='a')a++;else if(v==='b')b++;});
+    document.getElementById('setTallyA').textContent = nA()+': '+a;
+    document.getElementById('setTallyB').textContent = nB()+': '+b;
+  }
+  function refreshSetTeamLabels() {
+    const a = document.getElementById('setTeamA'), b = document.getElementById('setTeamB');
+    a.textContent = nA(); b.textContent = nB();
+    a.className = 'set-team-btn' + (setTeam==='a' ? ' sel-a' : '');
+    b.className = 'set-team-btn' + (setTeam==='b' ? ' sel-b' : '');
+  }
+  function selectSetTeam(t) {
+    setTeam = t;
+    document.getElementById('setTeamA').className = 'set-team-btn' + (t==='a' ? ' sel-a' : '');
+    document.getElementById('setTeamB').className = 'set-team-btn' + (t==='b' ? ' sel-b' : '');
+  }
+  function selectPenalty(n) {
+    setPenalty = n;
+    [2,3,4].forEach(v => document.getElementById('pen'+v).className = 'penalty-btn' + (v===n ? ' sel' : ''));
+  }
+
+  function submitHand() {
+    let aPoints=0,bPoints=0,aWon=[],bWon=[];
+    ['high','low','jack','game'].forEach(p => {
+      if(picks[p]==='a'){aPoints++;aWon.push(ICONS[p]);}
+      else if(picks[p]==='b'){bPoints++;bWon.push(ICONS[p]);}
+    });
+    if (openGames().length < MAX_OPEN && games.length < MAX_GAMES)
+      games.push({id:nextId++,scoreA:0,scoreB:0,closed:false,winner:null});
+    const appliedTo = [];
+    openGames().forEach(g => {
+      g.scoreA = Math.min(g.scoreA+aPoints,WIN);
+      g.scoreB = Math.min(g.scoreB+bPoints,WIN);
+      appliedTo.push(g.id);
+      if(g.scoreA>=WIN||g.scoreB>=WIN) closeGame(g);
+    });
+    hands.push({num:hands.length+1,type:'hand',aPoints,bPoints,aWon,bWon,setTeam:null,penalty:null,appliedTo});
+    picks={high:null,low:null,jack:null,game:null};
+    renderAll();
+  }
+
+  function submitSet() {
+    if (!setTeam) { alert('Please select which team got set.'); return; }
+    if (!setPenalty) { alert('Please select the point penalty.'); return; }
+    if (!openGames().length) {
+      if (games.length >= MAX_GAMES) { alert('All 12 games are closed.'); return; }
+      games.push({id:nextId++,scoreA:0,scoreB:0,closed:false,winner:null});
+    }
+    let aPoints=0,bPoints=0,aWon=[],bWon=[];
+    ['high','low','jack','game'].forEach(p => {
+      if(setPicks[p]==='a'){aPoints++;aWon.push(ICONS[p]);}
+      else if(setPicks[p]==='b'){bPoints++;bWon.push(ICONS[p]);}
+    });
+    const appliedTo = [];
+    openGames().forEach(g => {
+      if(setTeam==='a') g.scoreA=g.scoreA-setPenalty; else g.scoreB=g.scoreB-setPenalty;
+      g.scoreA=Math.min(g.scoreA+aPoints,WIN); g.scoreB=Math.min(g.scoreB+bPoints,WIN);
+      appliedTo.push(g.id);
+      if(g.scoreA>=WIN||g.scoreB>=WIN) closeGame(g);
+    });
+    const netA=(setTeam==='a'?-setPenalty:0)+aPoints, netB=(setTeam==='b'?-setPenalty:0)+bPoints;
+    hands.push({num:hands.length+1,type:'set',aPoints:netA,bPoints:netB,aWon,bWon,setTeam,penalty:setPenalty,appliedTo});
+    setTeam=null; setPenalty=null; setPicks={high:null,low:null,jack:null,game:null};
+    document.getElementById('setTeamA').className='set-team-btn';
+    document.getElementById('setTeamB').className='set-team-btn';
+    [2,3,4].forEach(v=>document.getElementById('pen'+v).className='penalty-btn');
+    renderAll();
+  }
+
+  function deleteHand(idx) {
+    const kept = hands.filter((_,i)=>i!==idx);
+    games=[]; nextId=1;
+    hands = kept.map((h,i) => {
+      let appliedTo=[];
+      if(h.type==='hand'){
+        if(openGames().length<MAX_OPEN&&games.length<MAX_GAMES)
+          games.push({id:nextId++,scoreA:0,scoreB:0,closed:false,winner:null});
+        openGames().forEach(g=>{
+          g.scoreA=Math.min(g.scoreA+h.aPoints,WIN); g.scoreB=Math.min(g.scoreB+h.bPoints,WIN);
+          appliedTo.push(g.id);
+          if(g.scoreA>=WIN||g.scoreB>=WIN) closeGame(g);
+        });
+      } else {
+        openGames().forEach(g=>{
+          if(h.setTeam==='a') g.scoreA=g.scoreA-h.penalty; else g.scoreB=g.scoreB-h.penalty;
+          g.scoreA=Math.min(g.scoreA+h.aWon.length,WIN); g.scoreB=Math.min(g.scoreB+h.bWon.length,WIN);
+          appliedTo.push(g.id);
+          if(g.scoreA>=WIN||g.scoreB>=WIN) closeGame(g);
+        });
+      }
+      return {...h,num:i+1,appliedTo};
+    });
+    renderAll();
+  }
+
+  function baseValue() { return parseFloat(document.getElementById('baseValue').value)||0; }
+  function gameValue(g) {
+    const id=(typeof g==='object')?g.id:g, base=id>=10?baseValue()*2:baseValue();
+    return(typeof g==='object'&&g.doubled)?base*2:base;
+  }
+  function gameDollarResult(g) {
+    const val=gameValue(g), baseVal=g.id>=10?baseValue()*2:baseValue();
+    let netA=0,netB=0;
+    if(g.closed){if(g.winner==='a')netA+=val;else netB+=val;}
+    hands.filter(h=>h.type==='set'&&h.appliedTo.includes(g.id)).forEach(h=>{
+      if(h.setTeam==='a'){netA-=baseVal;netB+=baseVal;}else{netB-=baseVal;netA+=baseVal;}
+    });
+    return{netA,netB};
+  }
+  function fmtDollar(n) {
+    if (n === 0) return null;
+    return (n > 0 ? '+' : '') + '$' + Math.abs(n).toFixed(2).replace(/\.00$/, '');
+  }
+
+  function renderAll() {
+    refreshToggles(); refreshTally(); refreshSetTeamLabels(); refreshSetToggles(); refreshSetTally();
+    renderGames(); renderHistory(); renderMatchWins();
+    document.getElementById('gamesScroll').scrollTop = document.getElementById('gamesScroll').scrollHeight;
+    document.getElementById('thA').textContent = nA();
+    document.getElementById('thB').textContent = nB();
+    document.getElementById('handTitle').textContent = 'Hand '+(hands.length+1);
+    const game12 = games.find(g=>g.id===MAX_GAMES);
+    if(game12&&game12.closed){
+      const wA=games.filter(g=>g.winner==='a').length, wB=games.filter(g=>g.winner==='b').length;
+      document.getElementById('winnerText').textContent = wA!==wB ? '🏆 '+(wA>wB?nA():nB())+' Wins!' : '🤝 Tie Match!';
+      document.getElementById('winnerSub').textContent = nA()+' '+wA+' — '+wB+' '+nB();
+      document.getElementById('winnerBanner').classList.add('show');
+      document.getElementById('handEntry').style.display='none';
+    }
+  }
+
+  function renderGames() {
+    const c=document.getElementById('gamesContainer');
+    if(!games.length){c.innerHTML='<div class="empty-msg">First hand will open Game 1</div>';return;}
+    c.innerHTML=games.map(g=>{
+      const pA=Math.min((g.scoreA/WIN)*100,100), pB=Math.min((g.scoreB/WIN)*100,100);
+      let stClass='st-open',stText='Open',cardExtra='';
+      if(g.closed){
+        if(g.winner==='a'){stClass='st-a';stText=nA()+' wins';cardExtra='closed closed-a';}
+        else{stClass='st-b';stText=nB()+' wins';cardExtra='closed closed-b';}
+      }
+      const{netA,netB}=gameDollarResult(g);
+      const dA=fmtDollar(netA),dB=fmtDollar(netB);
+      const dollarRow=baseValue()>0?`<div class="game-dollar-row">
+        <span class="gdollar-a ${netA>0?'pos':netA<0?'neg':''}">${dA||'—'}</span>
+        <span class="gdollar-label">${nA()} / ${nB()}</span>
+        <span class="gdollar-b ${netB>0?'pos':netB<0?'neg':''}">${dB||'—'}</span>
+      </div>`:'';
+      return `<div class="game-card ${cardExtra}">
+        <div class="game-header">
+          <span class="game-num">Game ${g.id}</span>
+          <span class="game-value">$${gameValue(g).toFixed(2).replace(/\.00$/,'')}${g.doubled?' <span style="color:#ffdd77;font-size:11px">2×</span>':''}</span>
+          <span class="game-status ${stClass}">${stText}</span>
+        </div>
+        <div class="game-scores">
+          <div class="score-side a"><div class="score-num">${g.scoreA}</div><div class="score-bar-wrap"><div class="score-bar-a" style="width:${pA}%"></div></div></div>
+          <div class="game-dash">—</div>
+          <div class="score-side b"><div class="score-num">${g.scoreB}</div><div class="score-bar-wrap"><div class="score-bar-b" style="width:${pB}%"></div></div></div>
+        </div>${dollarRow}</div>`;
+    }).join('');
+  }
+
+  function renderMatchWins() {
+    const wA=games.filter(g=>g.winner==='a').length, wB=games.filter(g=>g.winner==='b').length;
+    document.getElementById('winsA').textContent=wA;
+    document.getElementById('winsB').textContent=wB;
+    document.getElementById('doubleDisplay').textContent='$'+(baseValue()*2).toFixed(2).replace(/\.00$/,'');
+    let netA=0,winsNetA=0,setsNetA=0;
+    games.forEach(g=>{
+      const val=gameValue(g), baseVal=g.id>=10?baseValue()*2:baseValue();
+      if(g.closed){if(g.winner==='a'){netA+=val;winsNetA+=val;}else{netA-=val;winsNetA-=val;}}
+      hands.filter(h=>h.type==='set'&&h.appliedTo.includes(g.id)).forEach(h=>{
+        if(h.setTeam==='a'){netA-=baseVal;setsNetA-=baseVal;}else{netA+=baseVal;setsNetA+=baseVal;}
+      });
+    });
+    const tEl=document.getElementById('tallyAmount'), sEl=document.getElementById('tallySub');
+    const na=nA(),nb=nB();
+    if(netA===0){tEl.className='money-tally-amount even';tEl.textContent='Even — $0.00';sEl.textContent='';}
+    else if(netA>0){
+      tEl.className='money-tally-amount owes-b';tEl.textContent=nb+' owes $'+netA.toFixed(2);
+      const wp=winsNetA!==0?(winsNetA>0?na:nb)+' +$'+Math.abs(winsNetA).toFixed(2)+' games':'';
+      const sp=setsNetA!==0?(setsNetA>0?na:nb)+' +$'+Math.abs(setsNetA).toFixed(2)+' sets':'';
+      sEl.textContent=[wp,sp].filter(Boolean).join('  ·  ');
+    } else {
+      tEl.className='money-tally-amount owes-a';tEl.textContent=na+' owes $'+Math.abs(netA).toFixed(2);
+      const wp=winsNetA!==0?(winsNetA<0?na:nb)+' +$'+Math.abs(winsNetA).toFixed(2)+' games':'';
+      const sp=setsNetA!==0?(setsNetA<0?na:nb)+' +$'+Math.abs(setsNetA).toFixed(2)+' sets':'';
+      sEl.textContent=[wp,sp].filter(Boolean).join('  ·  ');
+    }
+  }
+
+  function renderHistory() {
+    const empty=document.getElementById('histEmpty'), table=document.getElementById('histTable'), tbody=document.getElementById('histBody');
+    if(!hands.length){empty.style.display='block';table.style.display='none';return;}
+    empty.style.display='none';table.style.display='table';
+    tbody.innerHTML=[...hands].reverse().map((h,ri)=>{
+      const realIdx=hands.length-1-ri, applied=h.appliedTo.map(id=>'G'+id).join(', ');
+      if(h.type==='set'){
+        const sn=h.setTeam==='a'?nA():nB();
+        const aC=h.setTeam==='a'?`<td class="pts-set">−${h.penalty}</td>`:`<td class="pts-a">0</td>`;
+        const bC=h.setTeam==='b'?`<td class="pts-set">−${h.penalty}</td>`:`<td class="pts-b">0</td>`;
+        return`<tr class="set-row"><td class="round-num">${h.num}</td>${aC}${bC}<td style="color:#8b3a10;font-size:11px;font-weight:700">SET ${sn.toUpperCase()}</td><td class="games-col">${applied}</td><td><button class="delete-btn" onclick="deleteHand(${realIdx})">✕</button></td></tr>`;
+      }
+      const aI=h.aWon.map(p=>`<span style="color:#9b2020">${p}</span>`).join(' ');
+      const bI=h.bWon.map(p=>`<span style="color:#7a6010">${p}</span>`).join(' ');
+      const icons=[aI,bI].filter(Boolean).join(' <span style="opacity:0.3">|</span> ')||'<span style="opacity:0.3">—</span>';
+      return`<tr><td class="round-num">${h.num}</td><td class="pts-a">${h.aPoints}</td><td class="pts-b">${h.bPoints}</td><td>${icons}</td><td class="games-col">${applied}</td><td><button class="delete-btn" onclick="deleteHand(${realIdx})">✕</button></td></tr>`;
+    }).join('');
+  }
+
+  function resetAll() {
+    games=[]; hands=[]; nextId=1;
+    picks={high:null,low:null,jack:null,game:null};
+    setPicks={high:null,low:null,jack:null,game:null};
+    setTeam=null; setPenalty=null;
+    document.getElementById('setTeamA').className='set-team-btn';
+    document.getElementById('setTeamB').className='set-team-btn';
+    [2,3,4].forEach(v=>document.getElementById('pen'+v).className='penalty-btn');
+    document.getElementById('winnerBanner').classList.remove('show');
+    document.getElementById('handEntry').style.display='';
+    switchMode('hand'); renderAll();
+  }
+
+  document.getElementById('teamAName').addEventListener('input', renderAll);
+  document.getElementById('teamBName').addEventListener('input', renderAll);
+  document.getElementById('baseValue').addEventListener('input', renderAll);
+  document.getElementById('btnSubmitHand').addEventListener('click', submitHand);
+  document.getElementById('btnSubmitSet').addEventListener('click', submitSet);
+
+  switchMode('hand');
+  renderAll();
+</script>
+</body>
+</html>
