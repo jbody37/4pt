@@ -210,6 +210,17 @@
   </div>
 </div>
 
+<div style="text-align:center;margin-bottom:14px" id="clearGameWrap">
+  <button id="btnClearGame" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:rgba(255,255,255,0.7);font-family:'Courier Prime',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:8px 20px;border-radius:6px;cursor:pointer;">
+    ✕ Clear Game
+  </button>
+  <div id="clearConfirm" style="display:none;margin-top:8px">
+    <span style="color:#fff;font-size:12px;letter-spacing:1px;margin-right:10px">Are you sure?</span>
+    <button id="btnClearYes" style="background:#9b2020;border:1px solid #f08080;color:#fff;font-family:'Courier Prime',monospace;font-size:12px;padding:6px 16px;border-radius:6px;cursor:pointer;margin-right:6px;">Yes</button>
+    <button id="btnClearNo" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;font-family:'Courier Prime',monospace;font-size:12px;padding:6px 16px;border-radius:6px;cursor:pointer;">No</button>
+  </div>
+</div>
+
 <div class="dollar-row">
   <div class="dollar-side">
     <div class="dollar-label">Games 1–9</div>
@@ -391,6 +402,7 @@
     document.getElementById('bidModal').style.display = 'none';
     g.closed = true; g.winner = winner;
     g.doubled = (winner === 'a' ? g.scoreB : g.scoreA) <= 0;
+    saveState();
     renderAll();
   }
 
@@ -464,6 +476,7 @@
     });
     hands.push({num:hands.length+1,type:'hand',aPoints,bPoints,aWon,bWon,setTeam:null,penalty:null,appliedTo});
     picks={high:null,low:null,jack:null,game:null};
+    saveState();
     renderAll();
   }
 
@@ -492,6 +505,7 @@
     document.getElementById('setTeamA').className='set-team-btn';
     document.getElementById('setTeamB').className='set-team-btn';
     [2,3,4].forEach(v=>document.getElementById('pen'+v).className='penalty-btn');
+    saveState();
     renderAll();
   }
 
@@ -518,6 +532,7 @@
       }
       return {...h,num:i+1,appliedTo};
     });
+    saveState();
     renderAll();
   }
 
@@ -636,6 +651,36 @@
     }).join('');
   }
 
+  function saveState() {
+    try {
+      localStorage.setItem('pitch_state', JSON.stringify({
+        games, hands, nextId,
+        teamA: document.getElementById('teamAName').value,
+        teamB: document.getElementById('teamBName').value,
+        baseVal: document.getElementById('baseValue').value
+      }));
+    } catch(e) {}
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem('pitch_state');
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.games) games = s.games;
+      if (s.hands) hands = s.hands;
+      if (s.nextId) nextId = s.nextId;
+      if (s.teamA) document.getElementById('teamAName').value = s.teamA;
+      if (s.teamB) document.getElementById('teamBName').value = s.teamB;
+      if (s.baseVal) document.getElementById('baseValue').value = s.baseVal;
+    } catch(e) {}
+  }
+
+  function clearGame() {
+    document.getElementById('clearConfirm').style.display = 'block';
+    document.getElementById('btnClearGame').style.display = 'none';
+  }
+
   function resetAll() {
     games=[]; hands=[]; nextId=1;
     picks={high:null,low:null,jack:null,game:null};
@@ -646,16 +691,33 @@
     [2,3,4].forEach(v=>document.getElementById('pen'+v).className='penalty-btn');
     document.getElementById('winnerBanner').classList.remove('show');
     document.getElementById('handEntry').style.display='';
+    saveState();
     switchMode('hand'); renderAll();
   }
 
-  document.getElementById('teamAName').addEventListener('input', renderAll);
-  document.getElementById('teamBName').addEventListener('input', renderAll);
-  document.getElementById('baseValue').addEventListener('input', renderAll);
+  document.getElementById('teamAName').addEventListener('input', () => { saveState(); renderAll(); });
+  document.getElementById('teamBName').addEventListener('input', () => { saveState(); renderAll(); });
+  document.getElementById('baseValue').addEventListener('input', () => { saveState(); renderAll(); });
   document.getElementById('btnSubmitHand').addEventListener('click', submitHand);
   document.getElementById('btnSubmitSet').addEventListener('click', submitSet);
+  document.getElementById('btnClearGame').addEventListener('click', clearGame);
+  document.getElementById('btnClearYes').addEventListener('click', () => {
+    document.getElementById('clearConfirm').style.display = 'none';
+    document.getElementById('btnClearGame').style.display = '';
+    resetAll();
+  });
+  document.getElementById('btnClearNo').addEventListener('click', () => {
+    document.getElementById('clearConfirm').style.display = 'none';
+    document.getElementById('btnClearGame').style.display = '';
+  });
+
+  // Save after every hand
+  const _renderAll = renderAll;
+  // Patch submitHand and submitSet to save after each action
+  const _submitHand = submitHand, _submitSet = submitSet, _deleteHand = deleteHand;
 
   switchMode('hand');
+  loadState();
   renderAll();
 </script>
 </body>
